@@ -1,0 +1,15 @@
+{
+  "name": "my_server",
+  "version": "1.0.0",
+  "description": "코드스페이스에서 서버 구현 2025.08.15 ~",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^5.1.0"
+  }
+}
