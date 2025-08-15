@@ -1,5 +1,6 @@
 // server.js
-import express from "express";      // 서버 도구(Express) 가져오기
+const express = require('express');
+
 const app = express();              // 서버 앱 만들기
 const PORT = process.env.PORT || 3000; // 포트 번호 정하기(환경변수 없으면 3000)
 
