@@ -4,7 +4,9 @@
   "description": "코드스페이스에서 서버 구현 2025.08.15 ~",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev" : "nodemon server.js",
+    "start" : "node server.js"
   },
   "keywords": [],
   "author": "",
