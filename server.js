@@ -5,7 +5,7 @@ const path = require('path');
 const app = express();              // 서버 앱 만들기
 const PORT = process.env.PORT || 80; // 포트 번호 정하기(환경변수 없으면 80)
 
-
+app.use(express.static('public')); // public 안의 파일 접근 가능
 app.get('/', (req, res) => {      // "/" 주소로 GET 요청이 오면
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });       
