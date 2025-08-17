@@ -1,11 +1,17 @@
 <!DOCTYPE html>
-<html lang="ko">
-<head>
-  <meta charset="UTF-8"> <!-- 문서의 문자 인코딩 -->
-  <title>my server</title> <!-- 브라우저 탭에 표시될 제목 -->
-  <script src="index.js" defer></script>
-</head>
-<body>
-  <h1>hello world!</h1>
-</body>
+  <html lang="ko">
+
+  <head>
+    <meta charset="UTF-8"> <!-- 문서의 문자 인코딩 -->
+    <title>my server</title> <!-- 브라우저 탭에 표시될 제목 -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="index.js" defer></script>
+  </head>
+
+  <body>
+    <h1>hello world!</h1>
+    <input id="m" autocomplete="off" /><button>보내기</button>
+    <ul id="messages"></ul>
+  </body>
+
 </html>
