@@ -34,6 +34,6 @@ io.on("connection", (socket) => {
 });
 
 
-app.listen(PORT, () => {            // 서버를 켠다(대기 시작)
+server.listen(PORT, () => {            // 서버를 켠다(대기 시작)
   console.log(`Server on http://localhost:${PORT}`);
 });
