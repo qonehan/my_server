@@ -19,12 +19,16 @@ app.get('/', (req, res) => {      // "/" 주소로 GET 요청이 오면
 io.on("connection", (socket) => {
   console.log("새로운 유저 접속!");
 
-  // 메시지 받기
-  socket.on("chat message", (msg) => {
-    console.log("메시지:", msg);
+  // 메시지 받기 (닉네임과 메시지를 포함한 객체)
+  socket.on("chat message", (data) => {
+    console.log(`${data.nickname}: ${data.message}`);
 
-    // 모든 클라이언트에게 전송
-    io.emit("chat message", msg);
+    // 모든 클라이언트에게 전송 (닉네임과 메시지 함께)
+    io.emit("chat message", {
+      nickname: data.nickname,
+      message: data.message,
+      timestamp: new Date().toLocaleTimeString()
+    });
   });
 
   // 연결 끊기 이벤트
