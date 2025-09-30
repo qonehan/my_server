@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ChatGPT 채팅</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>💬 ChatGPT 채팅</h1>
+      <p class="subtitle">AI와 대화해보세요</p>
+    </header>
+
+    <!-- API 키 설정 화면 -->
+    <div id="api-key-setup" class="api-key-setup">
+      <div class="setup-content">
+        <h2>🔑 OpenAI API 키 설정</h2>
+        <p>ChatGPT를 사용하려면 OpenAI API 키가 필요합니다.</p>
+
+        <div class="api-key-input-group">
+          <input
+            type="password"
+            id="api-key-input"
+            placeholder="sk-proj-..."
+            autocomplete="off"
+          />
+          <button id="save-api-key-btn">저장하고 시작</button>
+        </div>
+
+        <div class="help-text">
+          <p><strong>API 키 발급 방법:</strong></p>
+          <ol>
+            <li><a href="https://platform.openai.com/account/api-keys" target="_blank">OpenAI API Keys 페이지</a>로 이동</li>
+            <li>로그인 후 "Create new secret key" 클릭</li>
+            <li>생성된 키를 복사하여 위에 입력</li>
+          </ol>
+          <p class="note">⚠️ API 키는 브라우저에만 저장되며, 서버로 전송되지 않습니다.</p>
+        </div>
+      </div>
+    </div>
+
+    <div id="chat-container" style="display: none;">
+      <div id="messages"></div>
+    </div>
+
+    <div class="input-area" style="display: none;">
+      <textarea
+        id="user-input"
+        placeholder="메시지를 입력하세요..."
+        rows="3"
+      ></textarea>
+      <button id="send-btn">전송</button>
+      <button id="settings-btn" title="API 키 변경">⚙️</button>
+    </div>
+
+    <div id="loading" class="loading" style="display: none;">
+      <span>ChatGPT가 답변 중입니다...</span>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

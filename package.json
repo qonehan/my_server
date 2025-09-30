@@ -6,12 +6,15 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev" : "nodemon server.js",
-    "start" : "node server.js"
+    "start" : "node server.js",
+    "chatgpt": "node chatgpt-server.js",
+    "chatgpt-dev": "nodemon chatgpt-server.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "express": "^5.1.0"
+    "express": "^5.1.0",
+    "dotenv": "^16.4.7"
   }
 }
