@@ -1,34 +1,121 @@
 <!DOCTYPE html>
-  <html lang="ko">
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Shorts Generator</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- 좌측 패널: 입력 및 컨트롤 -->
+    <aside class="left-panel">
+      <header class="panel-header">
+        <h1>🎬 AI Shorts Generator</h1>
+        <p class="subtitle">Tree 기반 영상 생성</p>
+      </header>
 
-  <head>
-    <meta charset="UTF-8"> <!-- 문서의 문자 인코딩 -->
-    <title>my server</title> <!-- 브라우저 탭에 표시될 제목 -->
-    <link rel="stylesheet" href="style.css">
-    <script src="/socket.io/socket.io.js"></script>
-    <script src="index.js" defer></script>
-  </head>
+      <!-- API 키 입력 -->
+      <section class="input-section">
+        <label for="apiKey">OpenAI API Key</label>
+        <input
+          type="password"
+          id="apiKey"
+          placeholder="sk-proj-..."
+          autocomplete="off"
+        />
+      </section>
 
-  <body>
-    <h1>규원이의 실시간 채팅</h1>
+      <!-- 콘텐츠 입력 -->
+      <section class="input-section">
+        <label for="inputText">콘텐츠 주제</label>
+        <textarea
+          id="inputText"
+          placeholder="예: AI가 바꾸는 미래 사회에 대해 설명해줘"
+          rows="4"
+        ></textarea>
+      </section>
 
-    <div id="nickname-section">
-      <label for="nickname">닉네임: </label>
-      <input id="nickname" type="text" placeholder="닉네임을 입력하세요" maxlength="20" />
-      <button id="set-nickname">설정</button>
-    </div>
+      <!-- 장면 정보 -->
+      <section class="input-section">
+        <div class="scene-info-container">
+          <span class="label">장면 수:</span>
+          <span id="sceneInfo" class="scene-count">대기 중</span>
+        </div>
+      </section>
 
-    <div id="chat-section" style="display: none;">
-      <div>
-        <span id="current-nickname"></span>님으로 채팅 중
-        <button id="change-nickname">닉네임 변경</button>
+      <!-- 생성 버튼 -->
+      <button id="generateBtn" class="generate-btn">
+        🚀 영상 생성 시작
+      </button>
+
+      <!-- 상태 표시 -->
+      <section class="status-section">
+        <div class="status-header">
+          <span id="statusText" class="status-text">대기 중</span>
+        </div>
+        <p id="statusMessage" class="status-message"></p>
+        <div id="progressContainer" class="progress-container" style="display: none;">
+          <div class="progress-bar-bg">
+            <div id="progressBar" class="progress-bar" style="width: 0%"></div>
+          </div>
+        </div>
+        <p id="executionInfo" class="execution-info"></p>
+      </section>
+    </aside>
+
+    <!-- 우측 패널: 트리 시각화 -->
+    <main class="main-panel">
+      <div class="canvas-header">
+        <h2>실행 트리</h2>
+        <p class="help-text">노드를 클릭하면 상세 정보를 볼 수 있습니다</p>
       </div>
-      <ul id="messages"></ul>
-      <div>
-        <input id="m" autocomplete="off" placeholder="메시지를 입력하세요" />
-        <button id="send-msg">보내기</button>
+      <div id="canvasViewport" class="canvas-viewport">
+        <svg id="treeSvg" class="tree-svg" width="100%" height="100%">
+          <defs>
+            <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+              <polygon points="0 0, 10 3, 0 6" fill="#667eea" />
+            </marker>
+          </defs>
+        </svg>
+      </div>
+    </main>
+  </div>
+
+  <!-- 노드 상세 정보 팝업 -->
+  <div id="nodePopup" class="node-popup" style="display: none;">
+    <div class="node-popup-header">
+      <h3 id="popupNodeName">노드 이름</h3>
+      <button id="popupClose" class="node-popup-close">&times;</button>
+    </div>
+    <div id="popupContent" class="node-popup-content">
+      <!-- 동적으로 채워짐 -->
+    </div>
+  </div>
+
+  <!-- 결과 모달 -->
+  <div id="resultModal" class="result-modal" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>🎉 영상 생성 완료!</h2>
+        <button id="resultModalClose" class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <video id="resultVideo" controls autoplay class="result-video">
+          Your browser does not support the video tag.
+        </video>
+      </div>
+      <div class="modal-footer">
+        <a id="downloadBtn" class="btn btn-primary" download>
+          📥 다운로드
+        </a>
+        <button id="newVideoBtn" class="btn btn-secondary">
+          🔄 새 영상 만들기
+        </button>
       </div>
     </div>
-  </body>
+  </div>
 
+  <script src="app.js"></script>
+</body>
 </html>
