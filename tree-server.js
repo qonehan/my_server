@@ -134,58 +134,68 @@ app.get('/api/models', async (req, res) => {
     const models = {
       chat: [],      // GPT 채팅 모델
       image: [],     // DALL-E 이미지 모델
-      audio: [],     // TTS/Whisper 오디오 모델
+      audio: [],     // TTS/Whisper/Realtime 오디오 모델
       embedding: [], // 임베딩 모델
       other: []      // 기타
     };
 
     data.data.forEach(model => {
-      const modelId = model.id;
+      const modelId = model.id.toLowerCase();
+      const modelData = {
+        id: model.id,
+        name: model.id,
+        created: model.created,
+        owned_by: model.owned_by
+      };
 
-      // GPT 채팅 모델
-      if (modelId.includes('gpt-4') || modelId.includes('gpt-3.5')) {
-        models.chat.push({
-          id: modelId,
-          name: modelId,
-          created: model.created,
-          owned_by: model.owned_by
-        });
+      // GPT 채팅 모델 (gpt-3.5, gpt-4, gpt-5, o1, o3, o4, chatgpt 등)
+      if (
+        modelId.includes('gpt-3.5') ||
+        modelId.includes('gpt-4') ||
+        modelId.includes('gpt-5') ||
+        modelId.startsWith('o1') ||
+        modelId.startsWith('o3') ||
+        modelId.startsWith('o4') ||
+        modelId.includes('chatgpt') ||
+        modelId.includes('gpt-4.1')
+      ) {
+        // audio, realtime, transcribe, tts 등은 제외
+        if (!modelId.includes('audio') &&
+            !modelId.includes('realtime') &&
+            !modelId.includes('transcribe') &&
+            !modelId.includes('-tts')) {
+          models.chat.push(modelData);
+        } else {
+          models.audio.push(modelData);
+        }
       }
-      // DALL-E 이미지 모델
-      else if (modelId.includes('dall-e')) {
-        models.image.push({
-          id: modelId,
-          name: modelId,
-          created: model.created,
-          owned_by: model.owned_by
-        });
+      // 이미지 생성 모델 (DALL-E, gpt-image, sora)
+      else if (
+        modelId.includes('dall-e') ||
+        modelId.includes('gpt-image') ||
+        modelId.includes('sora')
+      ) {
+        models.image.push(modelData);
       }
-      // TTS/Whisper 오디오 모델
-      else if (modelId.includes('tts') || modelId.includes('whisper')) {
-        models.audio.push({
-          id: modelId,
-          name: modelId,
-          created: model.created,
-          owned_by: model.owned_by
-        });
+      // 오디오 모델 (TTS, Whisper, gpt-audio, gpt-realtime)
+      else if (
+        modelId.includes('tts') ||
+        modelId.includes('whisper') ||
+        modelId.includes('gpt-audio') ||
+        modelId.includes('gpt-realtime') ||
+        modelId.includes('audio') ||
+        modelId.includes('realtime') ||
+        modelId.includes('transcribe')
+      ) {
+        models.audio.push(modelData);
       }
       // 임베딩 모델
       else if (modelId.includes('embedding')) {
-        models.embedding.push({
-          id: modelId,
-          name: modelId,
-          created: model.created,
-          owned_by: model.owned_by
-        });
+        models.embedding.push(modelData);
       }
-      // 기타
+      // 기타 (davinci, babbage, moderation 등)
       else {
-        models.other.push({
-          id: modelId,
-          name: modelId,
-          created: model.created,
-          owned_by: model.owned_by
-        });
+        models.other.push(modelData);
       }
     });
 
