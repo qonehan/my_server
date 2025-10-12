@@ -162,14 +162,14 @@ Notebook paper background with colored pencil sketch of artificial intelligence 
   }
 };
 
-// ========== 초기 트리 구조 생성 (10개 장면 예시) ==========
+// ========== 초기 트리 구조 생성 (3개 장면 예시) ==========
 function createInitialNodes() {
   const nodes = [
     { ...initialNodeTemplates.root }
   ];
 
-  // 10개 장면 예시 (UI 표시용)
-  for (let i = 1; i <= 10; i++) {
+  // 3개 장면 예시 (UI 표시용, 실행 시 동적으로 변경됨)
+  for (let i = 1; i <= 3; i++) {
     nodes.push({
       ...initialNodeTemplates.planning,
       id: `scene${i}_planning`,
