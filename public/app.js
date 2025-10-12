@@ -51,6 +51,38 @@ let panOffsetY = 0;
 let isResizing = false;
 let sidebarWidth = 450;
 
+// 모델별 지원 파라미터 정의
+const modelCapabilities = {
+  'dall-e-2': {
+    supportsSize: true,
+    supportedSizes: ['256x256', '512x512', '1024x1024'],
+    supportsQuality: false,
+    supportsStyle: false
+  },
+  'dall-e-3': {
+    supportsSize: true,
+    supportedSizes: ['1024x1024', '1024x1792', '1792x1024'],
+    supportsQuality: true,
+    supportedQualities: ['standard', 'hd'],
+    supportsStyle: true,
+    supportedStyles: ['vivid', 'natural']
+  },
+  'gpt-image-1': {
+    supportsSize: true,
+    supportedSizes: ['1024x1792'],
+    supportsQuality: true,
+    supportedQualities: ['standard'],
+    supportsStyle: false
+  },
+  'gpt-image-1-mini': {
+    supportsSize: true,
+    supportedSizes: ['1024x1792'],
+    supportsQuality: true,
+    supportedQualities: ['standard'],
+    supportsStyle: false
+  }
+};
+
 // 초기 노드 템플릿 (실행 전 표시용)
 const initialNodeTemplates = {
   root: {
@@ -663,14 +695,51 @@ function onNodeClick(node, event) {
     }
   }
 
-  // DALL-E 설정
+  // DALL-E 설정 (모델별 지원 파라미터에 따라 동적 표시)
   if (node.nodeType === 'dalle') {
+    const currentModel = node.model || 'dall-e-3';
+    const capabilities = modelCapabilities[currentModel] || modelCapabilities['dall-e-3'];
+
     html += `<div class="popup-field">
       <span class="popup-field-label">DALL-E 설정</span>
-      <div class="popup-field-value">
-        크기: ${node.imageSize || '1024x1792'}<br>
-        품질: ${node.imageQuality || 'standard'}<br>
-        스타일: ${node.imageStyle || 'vivid'}
+      <div class="popup-field-value">`;
+
+    // 크기 (Size)
+    if (capabilities.supportsSize) {
+      html += `<strong>크기:</strong> ${node.imageSize || '1024x1792'}`;
+      if (capabilities.supportedSizes && capabilities.supportedSizes.length > 1) {
+        html += ` <span style="color: #999; font-size: 0.85em;">(지원: ${capabilities.supportedSizes.join(', ')})</span>`;
+      }
+      html += `<br>`;
+    }
+
+    // 품질 (Quality)
+    if (capabilities.supportsQuality) {
+      html += `<strong>품질:</strong> ${node.imageQuality || 'standard'}`;
+      if (capabilities.supportedQualities && capabilities.supportedQualities.length > 1) {
+        html += ` <span style="color: #999; font-size: 0.85em;">(지원: ${capabilities.supportedQualities.join(', ')})</span>`;
+      }
+      html += `<br>`;
+    } else {
+      html += `<strong>품질:</strong> <span style="color: #999;">지원 안 함</span><br>`;
+    }
+
+    // 스타일 (Style)
+    if (capabilities.supportsStyle) {
+      html += `<strong>스타일:</strong> ${node.imageStyle || 'vivid'}`;
+      if (capabilities.supportedStyles && capabilities.supportedStyles.length > 1) {
+        html += ` <span style="color: #999; font-size: 0.85em;">(지원: ${capabilities.supportedStyles.join(', ')})</span>`;
+      }
+    } else {
+      html += `<strong>스타일:</strong> <span style="color: #999;">지원 안 함 (${currentModel})</span>`;
+    }
+
+    html += `
+      </div>
+      <div class="placeholder-help">
+        <span class="placeholder-help-title">ℹ️ 모델별 지원 파라미터</span>
+        <strong>${currentModel}</strong> 모델은 위에 표시된 파라미터를 지원합니다.
+        모델을 변경하면 지원되는 파라미터가 자동으로 업데이트됩니다.
       </div>
     </div>`;
   }
@@ -979,6 +1048,13 @@ window.updateModelSelection = function(nodeId, layer, selectedModelId) {
   // 현재 표시된 노드들도 업데이트
   const initialNodes = createInitialNodes();
   updateTreeVisualization(initialNodes);
+
+  // 사이드바가 열려있으면 현재 노드 다시 렌더링 (파라미터 변경 반영)
+  if (selectedNode && selectedNode.id === nodeId) {
+    // 노드 정보 업데이트
+    selectedNode.model = selectedModelId;
+    onNodeClick(selectedNode);
+  }
 
   alert(`✅ 모델이 ${selectedModelId}로 변경되었습니다!\n(같은 층의 모든 노드에 적용됨)`);
 };
