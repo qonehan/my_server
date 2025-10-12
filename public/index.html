@@ -82,16 +82,19 @@
     </main>
   </div>
 
-  <!-- 노드 상세 정보 팝업 -->
-  <div id="nodePopup" class="node-popup" style="display: none;">
-    <div class="node-popup-header">
-      <h3 id="popupNodeName">노드 이름</h3>
-      <button id="popupClose" class="node-popup-close">&times;</button>
+  <!-- 노드 상세 정보 사이드바 -->
+  <aside id="nodeSidebar" class="node-sidebar" style="display: none;">
+    <div class="sidebar-resizer"></div>
+    <div class="sidebar-content-wrapper">
+      <div class="node-sidebar-header">
+        <h3 id="sidebarNodeName">노드 이름</h3>
+        <button id="sidebarClose" class="node-sidebar-close">&times;</button>
+      </div>
+      <div id="sidebarContent" class="node-sidebar-content">
+        <!-- 동적으로 채워짐 -->
+      </div>
     </div>
-    <div id="popupContent" class="node-popup-content">
-      <!-- 동적으로 채워짐 -->
-    </div>
-  </div>
+  </aside>
 
   <!-- 결과 모달 -->
   <div id="resultModal" class="result-modal" style="display: none;">

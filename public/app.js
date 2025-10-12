@@ -9,11 +9,12 @@ const sceneInfo = document.getElementById('sceneInfo');
 // 캔버스
 const treeSvg = document.getElementById('treeSvg');
 
-// 노드 팝업
-const nodePopup = document.getElementById('nodePopup');
-const popupNodeName = document.getElementById('popupNodeName');
-const popupContent = document.getElementById('popupContent');
-const popupClose = document.getElementById('popupClose');
+// 노드 사이드바
+const nodeSidebar = document.getElementById('nodeSidebar');
+const sidebarNodeName = document.getElementById('sidebarNodeName');
+const sidebarContent = document.getElementById('sidebarContent');
+const sidebarClose = document.getElementById('sidebarClose');
+const sidebarResizer = document.querySelector('.sidebar-resizer');
 
 // 상태바
 const statusText = document.getElementById('statusText');
@@ -46,12 +47,9 @@ let panStartY = 0;
 let panOffsetX = 0;
 let panOffsetY = 0;
 
-// 팝업 드래그 상태
-let isPopupDragging = false;
-let popupDragStartX = 0;
-let popupDragStartY = 0;
-let popupOffsetX = 0;
-let popupOffsetY = 0;
+// 사이드바 리사이즈 상태
+let isResizing = false;
+let sidebarWidth = 450;
 
 // 초기 노드 템플릿 (실행 전 표시용)
 const initialNodeTemplates = {
@@ -366,10 +364,14 @@ function updateTreeVisualization(nodes, fromExecution = false) {
     svg.removeChild(svg.lastChild);
   }
 
+  const layout = calculateTreeLayout(nodes);
+
+  // SVG 크기를 계산된 bounds에 맞게 설정 (viewBox 제거하여 원래 크기 유지)
+  svg.setAttribute('width', layout.bounds.width);
+  svg.setAttribute('height', layout.bounds.height);
+
   // 팬 오프셋 적용
   svg.style.transform = `translate(${panOffsetX}px, ${panOffsetY}px)`;
-
-  const layout = calculateTreeLayout(nodes);
 
   // 간선 그리기
   layout.edges.forEach(edge => {
@@ -426,6 +428,7 @@ function calculateTreeLayout(nodes) {
   const nodeHeight = 60;
   const horizontalGap = 30;
   const verticalGap = 80;
+  const padding = 50; // 여백
 
   const layers = {};
   nodes.forEach(node => {
@@ -444,11 +447,20 @@ function calculateTreeLayout(nodes) {
   const layoutNodes = [];
   const edges = [];
 
+  // 가장 넓은 레이어의 너비 계산
+  let maxLayerWidth = 0;
+  Object.keys(layers).forEach(layerIdx => {
+    const layerNodes = layers[layerIdx];
+    const layerWidth = layerNodes.length * (nodeWidth + horizontalGap) - horizontalGap;
+    maxLayerWidth = Math.max(maxLayerWidth, layerWidth);
+  });
+
   Object.keys(layers).sort().forEach((layerIdx, i) => {
     const layerNodes = layers[layerIdx];
     const layerWidth = layerNodes.length * (nodeWidth + horizontalGap) - horizontalGap;
-    const startX = Math.max(50, (window.innerWidth - 350 - layerWidth) / 2);
-    const y = 50 + i * (nodeHeight + verticalGap);
+    // 중앙 정렬
+    const startX = padding + (maxLayerWidth - layerWidth) / 2;
+    const y = padding + i * (nodeHeight + verticalGap);
 
     layerNodes.forEach((node, j) => {
       const x = startX + j * (nodeWidth + horizontalGap);
@@ -480,13 +492,32 @@ function calculateTreeLayout(nodes) {
     }
   });
 
-  return { nodes: layoutNodes, edges };
+  // 전체 레이아웃의 경계 계산
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  layoutNodes.forEach(node => {
+    minX = Math.min(minX, node.x);
+    minY = Math.min(minY, node.y);
+    maxX = Math.max(maxX, node.x + node.width);
+    maxY = Math.max(maxY, node.y + node.height);
+  });
+
+  const totalWidth = maxX - minX + padding * 2;
+  const totalHeight = maxY - minY + padding * 2;
+
+  return {
+    nodes: layoutNodes,
+    edges,
+    bounds: {
+      width: Math.max(totalWidth, 800), // 최소 너비
+      height: Math.max(totalHeight, 400) // 최소 높이
+    }
+  };
 }
 
 // ========== 노드 클릭 핸들러 ==========
 function onNodeClick(node, event) {
   selectedNode = node;
-  popupNodeName.textContent = node.name;
+  sidebarNodeName.textContent = node.name;
 
   let html = '';
 
@@ -649,7 +680,7 @@ function onNodeClick(node, event) {
     }
   }
 
-  popupContent.innerHTML = html;
+  sidebarContent.innerHTML = html;
 
   // 모델 select 박스 채우기
   if (!isExecuting && node.status === 'pending') {
@@ -661,18 +692,8 @@ function onNodeClick(node, event) {
     }
   }
 
-  // 팝업 위치 설정 (노드 옆에 표시)
-  const rect = event.target.getBoundingClientRect();
-  const popup = nodePopup;
-
-  popup.style.display = 'flex';
-
-  // 초기 위치 설정 (이전 드래그 오프셋 유지하지 않음)
-  popupOffsetX = Math.min(rect.right + 20, window.innerWidth - 420);
-  popupOffsetY = Math.max(100, rect.top);
-
-  popup.style.left = popupOffsetX + 'px';
-  popup.style.top = popupOffsetY + 'px';
+  // 사이드바 표시
+  nodeSidebar.style.display = 'flex';
 }
 
 // ========== 캔버스 드래그 (팬) 이벤트 ==========
@@ -695,11 +716,12 @@ window.addEventListener('mousemove', (e) => {
     treeSvg.style.transform = `translate(${panOffsetX}px, ${panOffsetY}px)`;
   }
 
-  if (isPopupDragging) {
-    popupOffsetX = e.clientX - popupDragStartX;
-    popupOffsetY = e.clientY - popupDragStartY;
-    nodePopup.style.left = popupOffsetX + 'px';
-    nodePopup.style.top = popupOffsetY + 'px';
+  if (isResizing) {
+    const newWidth = window.innerWidth - e.clientX;
+    if (newWidth >= 300 && newWidth <= 800) {
+      sidebarWidth = newWidth;
+      nodeSidebar.style.width = sidebarWidth + 'px';
+    }
   }
 });
 
@@ -708,20 +730,19 @@ window.addEventListener('mouseup', () => {
     isPanning = false;
     canvasViewport.classList.remove('dragging');
   }
-  if (isPopupDragging) {
-    isPopupDragging = false;
+  if (isResizing) {
+    isResizing = false;
+    document.body.style.cursor = '';
+    document.body.style.userSelect = '';
   }
 });
 
-// ========== 팝업 드래그 이벤트 ==========
-nodePopup.addEventListener('mousedown', (e) => {
-  // 헤더를 클릭했을 때만 드래그 시작
-  if (e.target.closest('.node-popup-header') && !e.target.classList.contains('node-popup-close')) {
-    isPopupDragging = true;
-    popupDragStartX = e.clientX - popupOffsetX;
-    popupDragStartY = e.clientY - popupOffsetY;
-    e.preventDefault(); // 텍스트 선택 방지
-  }
+// ========== 사이드바 리사이즈 이벤트 ==========
+sidebarResizer.addEventListener('mousedown', (e) => {
+  isResizing = true;
+  document.body.style.cursor = 'col-resize';
+  document.body.style.userSelect = 'none';
+  e.preventDefault();
 });
 
 // ========== 상태 업데이트 ==========
@@ -790,8 +811,8 @@ window.saveTemplate = function(nodeId, layer) {
   const initialNodes = createInitialNodes();
   updateTreeVisualization(initialNodes);
 
-  // 팝업 닫기
-  nodePopup.style.display = 'none';
+  // 사이드바 닫기
+  nodeSidebar.style.display = 'none';
 
   alert('같은 층의 모든 노드에 적용되었습니다!');
 };
@@ -816,8 +837,8 @@ window.saveSystemMessage = function(nodeId, layer) {
   const initialNodes = createInitialNodes();
   updateTreeVisualization(initialNodes);
 
-  // 팝업 닫기
-  nodePopup.style.display = 'none';
+  // 사이드바 닫기
+  nodeSidebar.style.display = 'none';
 
   alert('같은 층의 모든 노드에 적용되었습니다!');
 };
@@ -917,8 +938,8 @@ window.updateModelSelection = function(nodeId, layer, selectedModelId) {
 // ========== 이벤트 리스너 ==========
 generateBtn.addEventListener('click', generateVideo);
 
-popupClose.addEventListener('click', () => {
-  nodePopup.style.display = 'none';
+sidebarClose.addEventListener('click', () => {
+  nodeSidebar.style.display = 'none';
 });
 
 resultModalClose.addEventListener('click', () => {
