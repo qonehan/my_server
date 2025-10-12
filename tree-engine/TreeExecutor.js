@@ -59,12 +59,19 @@ class TreeExecutor {
       rootInput: initialInput
     };
 
-    // 루트 노드들 실행 (병렬)
+    // 루트 노드들 실행 (병렬, 독립적으로 성공/실패 처리)
     const rootPromises = this.rootNodes.map(rootNode =>
       this.executeNode(rootNode, [initialInput])
     );
 
-    await Promise.all(rootPromises);
+    const results = await Promise.allSettled(rootPromises);
+
+    // 실패한 노드 로깅 (에러 전파하지 않음)
+    results.forEach((result, index) => {
+      if (result.status === 'rejected') {
+        console.error(`⚠️  루트 노드 실패 (${this.rootNodes[index].name}):`, result.reason?.message);
+      }
+    });
 
     console.log('✅ 트리 실행 완료');
     return this.getResults();
@@ -110,7 +117,7 @@ class TreeExecutor {
         this.createDynamicChildren(node);
       }
 
-      // 5. 자식 노드들 실행 (병렬)
+      // 5. 자식 노드들 실행 (병렬, 독립적으로 성공/실패 처리)
       if (node.children.length > 0) {
         console.log(`   ↳ 자식 노드 ${node.children.length}개 실행...`);
 
@@ -118,14 +125,22 @@ class TreeExecutor {
           this.executeNode(child, node.outputArray)
         );
 
-        await Promise.all(childPromises);
+        const childResults = await Promise.allSettled(childPromises);
+
+        // 실패한 자식 노드 로깅 (에러 전파하지 않음)
+        childResults.forEach((result, index) => {
+          if (result.status === 'rejected') {
+            console.error(`   ⚠️  자식 노드 실패 (${node.children[index].name}):`, result.reason?.message);
+          }
+        });
       }
 
     } catch (error) {
       node.status = 'failed';
       node.error = error.message;
       console.error(`❌ 노드 실행 실패: ${node.name}`, error.message);
-      throw error;
+      // 에러를 throw하지 않고 노드에만 실패 표시
+      // throw error;
     }
   }
 

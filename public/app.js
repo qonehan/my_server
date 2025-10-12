@@ -71,14 +71,14 @@ const modelCapabilities = {
     supportsSize: true,
     supportedSizes: ['1024x1792'],
     supportsQuality: true,
-    supportedQualities: ['standard'],
+    supportedQualities: ['low', 'medium', 'high', 'auto'],
     supportsStyle: false
   },
   'gpt-image-1-mini': {
     supportsSize: true,
     supportedSizes: ['1024x1792'],
     supportsQuality: true,
-    supportedQualities: ['standard'],
+    supportedQualities: ['low', 'medium', 'high', 'auto'],
     supportsStyle: false
   }
 };
@@ -178,7 +178,7 @@ Notebook paper background with colored pencil sketch of artificial intelligence 
     model: 'gpt-image-1',
     promptTemplate: '{parent}',
     imageSize: '1024x1792',
-    imageQuality: 'standard',
+    imageQuality: 'medium',
     imageStyle: 'natural',
     parentArrayIndex: 1  // 2층의 두 번째 출력 (이미지 프롬프트)
   },
@@ -244,8 +244,8 @@ function getDynamicTreeConfig() {
         model: initialNodeTemplates.image.model || 'dall-e-3',
         promptTemplate: '{parent}',
         imageSize: initialNodeTemplates.image.imageSize || '1024x1792',
-        imageQuality: initialNodeTemplates.image.imageQuality || 'standard',
-        imageStyle: initialNodeTemplates.image.imageStyle || 'vivid'
+        imageQuality: initialNodeTemplates.image.imageQuality || 'medium',
+        imageStyle: initialNodeTemplates.image.imageStyle || 'natural'
       },
       audio: {
         nodeType: 'tts',
