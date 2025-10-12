@@ -699,6 +699,7 @@ function onNodeClick(node, event) {
   if (node.nodeType === 'dalle') {
     const currentModel = node.model || 'dall-e-3';
     const capabilities = modelCapabilities[currentModel] || modelCapabilities['dall-e-3'];
+    const isEditable = !isExecuting && node.status === 'pending';
 
     html += `<div class="popup-field">
       <span class="popup-field-label">DALL-E 설정</span>
@@ -706,32 +707,57 @@ function onNodeClick(node, event) {
 
     // 크기 (Size)
     if (capabilities.supportsSize) {
-      html += `<strong>크기:</strong> ${node.imageSize || '1024x1792'}`;
-      if (capabilities.supportedSizes && capabilities.supportedSizes.length > 1) {
-        html += ` <span style="color: #999; font-size: 0.85em;">(지원: ${capabilities.supportedSizes.join(', ')})</span>`;
+      html += `<div style="margin-bottom: 8px;">
+        <strong>크기:</strong> `;
+      if (isEditable && capabilities.supportedSizes && capabilities.supportedSizes.length > 1) {
+        html += `<select id="imageSize_${node.id}" class="model-select-compact" style="width: auto; display: inline-block; margin-left: 8px;" onchange="updateImageParameter('${node.id}', 'imageSize', this.value)">`;
+        capabilities.supportedSizes.forEach(size => {
+          const selected = size === (node.imageSize || '1024x1792') ? 'selected' : '';
+          html += `<option value="${size}" ${selected}>${size}</option>`;
+        });
+        html += `</select>`;
+      } else {
+        html += `<span>${node.imageSize || '1024x1792'}</span>`;
       }
-      html += `<br>`;
+      html += `</div>`;
     }
 
     // 품질 (Quality)
     if (capabilities.supportsQuality) {
-      html += `<strong>품질:</strong> ${node.imageQuality || 'standard'}`;
-      if (capabilities.supportedQualities && capabilities.supportedQualities.length > 1) {
-        html += ` <span style="color: #999; font-size: 0.85em;">(지원: ${capabilities.supportedQualities.join(', ')})</span>`;
+      html += `<div style="margin-bottom: 8px;">
+        <strong>품질:</strong> `;
+      if (isEditable && capabilities.supportedQualities && capabilities.supportedQualities.length > 1) {
+        html += `<select id="imageQuality_${node.id}" class="model-select-compact" style="width: auto; display: inline-block; margin-left: 8px;" onchange="updateImageParameter('${node.id}', 'imageQuality', this.value)">`;
+        capabilities.supportedQualities.forEach(quality => {
+          const selected = quality === (node.imageQuality || 'medium') ? 'selected' : '';
+          html += `<option value="${quality}" ${selected}>${quality}</option>`;
+        });
+        html += `</select>`;
+      } else {
+        html += `<span>${node.imageQuality || 'medium'}</span>`;
       }
-      html += `<br>`;
+      html += `</div>`;
     } else {
-      html += `<strong>품질:</strong> <span style="color: #999;">지원 안 함</span><br>`;
+      html += `<div style="margin-bottom: 8px;"><strong>품질:</strong> <span style="color: #999;">지원 안 함</span></div>`;
     }
 
     // 스타일 (Style)
     if (capabilities.supportsStyle) {
-      html += `<strong>스타일:</strong> ${node.imageStyle || 'vivid'}`;
-      if (capabilities.supportedStyles && capabilities.supportedStyles.length > 1) {
-        html += ` <span style="color: #999; font-size: 0.85em;">(지원: ${capabilities.supportedStyles.join(', ')})</span>`;
+      html += `<div style="margin-bottom: 8px;">
+        <strong>스타일:</strong> `;
+      if (isEditable && capabilities.supportedStyles && capabilities.supportedStyles.length > 1) {
+        html += `<select id="imageStyle_${node.id}" class="model-select-compact" style="width: auto; display: inline-block; margin-left: 8px;" onchange="updateImageParameter('${node.id}', 'imageStyle', this.value)">`;
+        capabilities.supportedStyles.forEach(style => {
+          const selected = style === (node.imageStyle || 'natural') ? 'selected' : '';
+          html += `<option value="${style}" ${selected}>${style}</option>`;
+        });
+        html += `</select>`;
+      } else {
+        html += `<span>${node.imageStyle || 'natural'}</span>`;
       }
+      html += `</div>`;
     } else {
-      html += `<strong>스타일:</strong> <span style="color: #999;">지원 안 함 (${currentModel})</span>`;
+      html += `<div style="margin-bottom: 8px;"><strong>스타일:</strong> <span style="color: #999;">지원 안 함 (${currentModel})</span></div>`;
     }
 
     html += `
@@ -739,7 +765,7 @@ function onNodeClick(node, event) {
       <div class="placeholder-help">
         <span class="placeholder-help-title">ℹ️ 모델별 지원 파라미터</span>
         <strong>${currentModel}</strong> 모델은 위에 표시된 파라미터를 지원합니다.
-        모델을 변경하면 지원되는 파라미터가 자동으로 업데이트됩니다.
+        ${isEditable ? '드롭다운에서 값을 선택하여 변경할 수 있습니다.' : ''}
       </div>
     </div>`;
   }
@@ -1041,6 +1067,29 @@ window.updateModelSelection = function(nodeId, layer, selectedModelId) {
     initialNodeTemplates.planning.model = selectedModelId;
   } else if (layer === 'image') {
     initialNodeTemplates.image.model = selectedModelId;
+
+    // 이미지 모델 변경 시 해당 모델의 기본 파라미터로 자동 설정
+    const capabilities = modelCapabilities[selectedModelId];
+    if (capabilities) {
+      // 크기 - 첫 번째 지원 크기로 설정
+      if (capabilities.supportedSizes && capabilities.supportedSizes.length > 0) {
+        initialNodeTemplates.image.imageSize = capabilities.supportedSizes[0];
+      }
+      // 품질 - 첫 번째 지원 품질로 설정 (또는 medium/standard)
+      if (capabilities.supportedQualities && capabilities.supportedQualities.length > 0) {
+        const defaultQuality = capabilities.supportedQualities.includes('medium') ? 'medium'
+                              : capabilities.supportedQualities.includes('standard') ? 'standard'
+                              : capabilities.supportedQualities[0];
+        initialNodeTemplates.image.imageQuality = defaultQuality;
+      }
+      // 스타일 - 지원하면 natural, 아니면 제거
+      if (capabilities.supportsStyle && capabilities.supportedStyles) {
+        const defaultStyle = capabilities.supportedStyles.includes('natural') ? 'natural' : capabilities.supportedStyles[0];
+        initialNodeTemplates.image.imageStyle = defaultStyle;
+      } else {
+        initialNodeTemplates.image.imageStyle = null;
+      }
+    }
   } else if (layer === 'audio') {
     initialNodeTemplates.audio.model = selectedModelId;
   }
@@ -1053,10 +1102,40 @@ window.updateModelSelection = function(nodeId, layer, selectedModelId) {
   if (selectedNode && selectedNode.id === nodeId) {
     // 노드 정보 업데이트
     selectedNode.model = selectedModelId;
+    if (layer === 'image' && modelCapabilities[selectedModelId]) {
+      const capabilities = modelCapabilities[selectedModelId];
+      if (capabilities.supportedSizes) selectedNode.imageSize = capabilities.supportedSizes[0];
+      if (capabilities.supportedQualities) {
+        const defaultQuality = capabilities.supportedQualities.includes('medium') ? 'medium'
+                              : capabilities.supportedQualities.includes('standard') ? 'standard'
+                              : capabilities.supportedQualities[0];
+        selectedNode.imageQuality = defaultQuality;
+      }
+      if (capabilities.supportsStyle && capabilities.supportedStyles) {
+        selectedNode.imageStyle = capabilities.supportedStyles.includes('natural') ? 'natural' : capabilities.supportedStyles[0];
+      }
+    }
     onNodeClick(selectedNode);
   }
 
   alert(`✅ 모델이 ${selectedModelId}로 변경되었습니다!\n(같은 층의 모든 노드에 적용됨)`);
+};
+
+// ========== 이미지 파라미터 업데이트 ==========
+window.updateImageParameter = function(nodeId, paramName, value) {
+  // 템플릿 업데이트
+  initialNodeTemplates.image[paramName] = value;
+
+  // 현재 노드 업데이트
+  if (selectedNode && selectedNode.id === nodeId) {
+    selectedNode[paramName] = value;
+  }
+
+  // 트리 시각화 업데이트
+  const initialNodes = createInitialNodes();
+  updateTreeVisualization(initialNodes);
+
+  console.log(`✅ ${paramName} 변경: ${value} (같은 층 모든 노드에 적용)`);
 };
 
 // ========== 이벤트 리스너 ==========
