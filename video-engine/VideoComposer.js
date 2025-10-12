@@ -102,6 +102,7 @@ class VideoComposer {
             filter: 'drawtext',
             options: {
               text: subtitle,
+              fontfile: '/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc',
               fontsize: 48,
               fontcolor: 'white',
               x: '(w-text_w)/2',
