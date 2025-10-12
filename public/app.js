@@ -57,49 +57,66 @@ const initialNodeTemplates = {
     id: 'root',
     name: '[1층] Shorts 대본 생성',
     status: 'pending',
-    model: 'gpt-3.5-turbo',
-    systemMessage: '너는 Shorts 영상 대본 작가야. 사용자 입력을 바탕으로 흥미로운 Shorts 대본을 장면별로 작성해줘.',
-    promptTemplate: `아래 내용을 바탕으로 30-60초 분량의 Shorts 영상 대본을 작성해줘.
-각 장면은 5-10초 분량으로, 3-5개 장면으로 구성해줘.
+    model: 'gpt-4o',
+    systemMessage: '너는 교육 컨텐츠 전문 대본 작가야. 글을 읽고 핵심을 파악해서 이해하기 쉬운 Shorts 대본을 작성해.',
+    promptTemplate: `아래 글을 읽고 30-60초 분량의 교육용 Shorts 영상 대본을 작성해줘.
 
 입력 내용:
 {input}
 
-출력 형식 (반드시 "---"로 구분):
-[장면1 대본 - 한두 문장으로 이 장면에서 말할 내용]
+대본 작성 규칙 (반드시 준수):
+1. 각 장면은 5-10초 분량으로, 3-5개 장면으로 구성
+2. 두괄식으로 작성: 핵심 요점을 먼저 말하고 부연 설명
+3. TTS가 읽을 대사만 작성 - 지문, 설명, 괄호 등 절대 금지
+4. 한 장면당 1-2문장의 짧은 대사만 작성
+5. 자연스러운 구어체로 작성
+
+⚠️ 출력 형식 (이 형식을 정확히 지켜야 함):
+[장면1 대사만 작성. 2문장 이내.]
 ---
-[장면2 대본 - 한두 문장으로 이 장면에서 말할 내용]
+[장면2 대사만 작성. 2문장 이내.]
 ---
-...`
+[장면3 대사만 작성. 2문장 이내.]
+
+❌ 잘못된 예시: "장면1: 인공지능의 발전 (설명)"
+✅ 올바른 예시: "인공지능은 우리 삶을 크게 바꾸고 있어요. 오늘은 그 변화를 살펴볼게요."
+
+반드시 "---"로 장면을 구분하고, 오직 대사만 작성하세요.`
   },
   planning: {
     name: '[2층] 자막 & 이미지 컨셉',
     status: 'pending',
-    model: 'gpt-3.5-turbo',
-    systemMessage: '너는 영상 연출 전문가야. 대본을 받아서 화면에 표시할 자막과 배경 이미지 컨셉을 만들어.',
+    model: 'gpt-4o',
+    systemMessage: '너는 교육 영상 연출 전문가야. 대본을 분석해서 핵심 키워드 자막과 시각적 이미지 컨셉을 만들어.',
     promptTemplate: `다음 장면의 대본을 바탕으로 자막과 이미지를 기획해줘:
 
 장면 대본:
 {parent}
 
 출력 형식 (정확히 지켜줘):
-첫 번째 줄: 화면에 표시할 자막 텍스트 (15자 이내, 핵심만 간결하게)
+첫 번째 줄: 화면에 표시할 핵심 키워드 자막 (10자 이내)
 ===IMAGE===
-두 번째 부분: DALL-E 이미지 생성 프롬프트 (영문, vivid style, 9:16 portrait, 대본 내용을 시각적으로 표현)
+두 번째 부분: DALL-E 이미지 프롬프트 (영문, 공책 배경 + 색연필 스타일)
+
+⚠️ 이미지 프롬프트 작성 규칙:
+- 반드시 "notebook paper background with colored pencil sketch of [주요 개념]" 형식
+- 9:16 portrait, hand-drawn style, educational illustration 포함
+- 대본의 핵심 개념만 간단한 스케치로 표현
 
 예시:
-AI가 바꾸는 미래
+AI 발전
 ===IMAGE===
-A futuristic cityscape with AI technology, holographic displays, robots and humans collaborating, vibrant colors, 9:16 portrait, vivid style, digital art`
+Notebook paper background with colored pencil sketch of artificial intelligence concept, simple hand-drawn brain with circuits and data flowing, 9:16 portrait, hand-drawn style, educational illustration, pastel colors`
   },
   image: {
     name: '[3층] 이미지 생성',
     status: 'pending',
     nodeType: 'dalle',
+    model: 'dall-e-3',
     promptTemplate: '{parent}',
     imageSize: '1024x1792',
     imageQuality: 'standard',
-    imageStyle: 'vivid',
+    imageStyle: 'natural',
     parentArrayIndex: 1  // 2층의 두 번째 출력 (이미지 프롬프트)
   },
   audio: {
