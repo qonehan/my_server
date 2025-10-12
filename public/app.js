@@ -112,7 +112,7 @@ Notebook paper background with colored pencil sketch of artificial intelligence 
     name: '[3층] 이미지 생성',
     status: 'pending',
     nodeType: 'dalle',
-    model: 'dall-e-3',
+    model: 'gpt-image-1',
     promptTemplate: '{parent}',
     imageSize: '1024x1792',
     imageQuality: 'standard',
