@@ -22,6 +22,9 @@ body {
 /* ==================== 좌측 패널 ==================== */
 .left-panel {
   width: 350px;
+  min-width: 350px;
+  max-width: 350px;
+  flex-shrink: 0;
   background: white;
   box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
   display: flex;
@@ -277,6 +280,8 @@ body {
   right: 0;
   height: 100vh;
   width: 450px;
+  min-width: 450px;
+  max-width: 450px;
   background: white;
   box-shadow: -4px 0 16px rgba(0, 0, 0, 0.15);
   z-index: 1000;
