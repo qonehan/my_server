@@ -283,20 +283,28 @@ class TreeExecutor {
    */
   async callDallE(node) {
     const dalleModel = node.model || 'dall-e-3';
+
+    // Request body 구성 (gpt-image-1은 style 파라미터 미지원)
+    const requestBody = {
+      model: dalleModel,
+      prompt: node.input,
+      n: 1,
+      size: node.imageSize,
+      quality: node.imageQuality
+    };
+
+    // dall-e-3만 style 파라미터 지원
+    if (dalleModel === 'dall-e-3' && node.imageStyle) {
+      requestBody.style = node.imageStyle;
+    }
+
     const response = await fetch('https://api.openai.com/v1/images/generations', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${this.apiKey}`
       },
-      body: JSON.stringify({
-        model: dalleModel,
-        prompt: node.input,
-        n: 1,
-        size: node.imageSize,
-        quality: node.imageQuality,
-        style: node.imageStyle
-      })
+      body: JSON.stringify(requestBody)
     });
 
     if (!response.ok) {
