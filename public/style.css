@@ -31,6 +31,7 @@ body {
   flex-direction: column;
   overflow-y: auto;
   z-index: 10;
+  position: relative;
 }
 
 .panel-header {
@@ -102,6 +103,69 @@ body {
   font-size: 16px;
   font-weight: bold;
   color: #667eea;
+}
+
+/* ==================== 테스트 모드 토글 ==================== */
+.test-mode-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  padding: 10px 14px;
+  background: #f5f5f5;
+  border-radius: 8px;
+}
+
+.test-mode-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #555;
+  margin: 0;
+}
+
+.toggle-switch {
+  position: relative;
+  width: 50px;
+  height: 26px;
+  cursor: pointer;
+  margin-top: 7px;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  border-radius: 26px;
+  transition: background-color 0.3s;
+}
+
+.toggle-slider::before {
+  position: absolute;
+  content: "";
+  height: 20px;
+  width: 20px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  border-radius: 50%;
+  transition: transform 0.3s;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.toggle-switch input:checked + .toggle-slider {
+  background-color: #667eea;
+}
+
+.toggle-switch input:checked + .toggle-slider::before {
+  transform: translateX(24px);
 }
 
 .generate-btn {
@@ -609,6 +673,211 @@ body {
 
 .btn-secondary:hover {
   background: #e0e0e0;
+}
+
+/* ==================== 개발자 설정 버튼 (사이드바 왼쪽 아래) ==================== */
+.dev-settings-btn-sidebar {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  background: rgba(102, 126, 234, 0.1);
+  border: 2px solid #667eea;
+  color: #667eea;
+  font-size: 20px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.3s;
+  z-index: 20;
+}
+
+.dev-settings-btn-sidebar:hover {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  transform: rotate(90deg);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+/* ==================== 개발자 설정 모달 ==================== */
+.dev-settings-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.dev-modal-content {
+  width: 90%;
+  max-width: 700px;
+  max-height: 85vh;
+}
+
+.dev-modal-body {
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.dev-login-screen {
+  padding: 20px;
+  text-align: center;
+}
+
+.dev-login-form {
+  max-width: 300px;
+  margin: 0 auto;
+}
+
+.dev-login-form label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #555;
+  text-align: left;
+}
+
+.dev-login-form input {
+  width: 100%;
+  padding: 10px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 14px;
+  margin-bottom: 12px;
+}
+
+.dev-login-form input:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+.dev-login-error {
+  color: #dc3545;
+  font-size: 13px;
+  margin-top: 8px;
+}
+
+.dev-settings-content {
+  padding: 20px;
+}
+
+.dev-settings-content h3 {
+  font-size: 18px;
+  color: #333;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.dev-setting-item {
+  margin-bottom: 20px;
+}
+
+.dev-setting-item label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #555;
+}
+
+.dev-setting-item input,
+.dev-setting-item textarea {
+  width: 100%;
+  padding: 10px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: 'Courier New', monospace;
+}
+
+.dev-setting-item input:focus,
+.dev-setting-item textarea:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+.dev-setting-item textarea {
+  resize: vertical;
+  font-family: 'Courier New', monospace;
+  line-height: 1.5;
+}
+
+.dev-help-text {
+  font-size: 12px;
+  color: #999;
+  margin-top: 4px;
+}
+
+.dev-button-group {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid #e0e0e0;
+}
+
+/* ==================== 개발자 설정 탭 ==================== */
+.dev-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+  border-bottom: 2px solid #e0e0e0;
+  padding-bottom: 0;
+}
+
+.dev-tab {
+  padding: 10px 16px;
+  background: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  color: #666;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s;
+  white-space: nowrap;
+}
+
+.dev-tab:hover {
+  color: #667eea;
+  background: rgba(102, 126, 234, 0.05);
+}
+
+.dev-tab.active {
+  color: #667eea;
+  border-bottom-color: #667eea;
+  font-weight: 600;
+}
+
+.dev-tab-content {
+  display: none;
+}
+
+.dev-tab-content.active {
+  display: block;
+}
+
+.dev-select {
+  width: 100%;
+  padding: 10px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 14px;
+  background: white;
+  cursor: pointer;
+}
+
+.dev-select:focus {
+  outline: none;
+  border-color: #667eea;
 }
 
 /* ==================== 로딩 애니메이션 ==================== */

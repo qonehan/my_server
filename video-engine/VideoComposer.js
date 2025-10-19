@@ -28,6 +28,7 @@ class VideoComposer {
   async composeVideo(scenes, executionId) {
     try {
       console.log(`\n🎬 영상 합성 시작 (${scenes.length}개 장면)`);
+      console.log(`   첫 번째 장면 데이터:`, JSON.stringify(scenes[0], null, 2));
 
       // 출력 파일 경로
       const outputFilename = `${executionId}_${Date.now()}.mp4`;
@@ -142,9 +143,12 @@ class VideoComposer {
    */
   async concatenateScenes(scenePaths, outputPath) {
     return new Promise((resolve, reject) => {
-      // concat.txt 파일 생성
+      // concat.txt 파일 생성 (절대 경로 사용)
       const concatFile = path.join(this.outputDir, `concat_${Date.now()}.txt`);
-      const concatContent = scenePaths.map(p => `file '${p}'`).join('\n');
+      const concatContent = scenePaths.map(p => `file '${path.resolve(p)}'`).join('\n');
+
+      console.log(`    📝 Concat 파일 생성: ${concatFile}`);
+      console.log(`    📁 포함된 장면: ${scenePaths.length}개`);
       fs.writeFileSync(concatFile, concatContent);
 
       ffmpeg()

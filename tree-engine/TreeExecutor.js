@@ -4,6 +4,7 @@ const TreeNode = require('./TreeNode');
 const DalleNode = require('./DalleNode');
 const TTSNode = require('./TTSNode');
 const FileManager = require('../utils/FileManager');
+const { execSync } = require('child_process');
 
 class TreeExecutor {
   constructor(apiKey, executionId = null) {
@@ -151,7 +152,18 @@ class TreeExecutor {
     const sceneCount = rootNode.outputArray.length;
     const templates = this.treeConfig.nodeTemplates || {};
 
-    for (let i = 0; i < sceneCount; i++) {
+    // 테스트 모드 확인
+    const isTestMode = this.treeConfig.testMode || false;
+    const testSceneCount = this.treeConfig.testSceneCount || 2;  // 개발자 설정에서 가져온 테스트 장면 수
+    const limitedSceneCount = isTestMode ? Math.min(sceneCount, testSceneCount) : sceneCount;
+
+    if (isTestMode) {
+      console.log(`   ⚠️  테스트 모드: ${sceneCount}개 중 ${limitedSceneCount}개 장면만 생성`);
+    } else {
+      console.log(`   ✅ 일반 모드: ${sceneCount}개 장면 전체 생성`);
+    }
+
+    for (let i = 0; i < limitedSceneCount; i++) {
       const sceneIndex = i + 1;
 
       // 2층: 자막 & 이미지 컨셉 노드
@@ -197,7 +209,7 @@ class TreeExecutor {
       }
     }
 
-    console.log(`   ✅ 동적으로 ${sceneCount * 3}개 노드 생성 완료`);
+    console.log(`   ✅ 동적으로 ${limitedSceneCount * 3}개 노드 생성 완료`);
   }
 
   /**
@@ -385,10 +397,19 @@ class TreeExecutor {
     node.audioPath = await this.fileManager.saveAudio(audioBuffer, filename);
     console.log(`   💾 오디오 저장: ${node.audioPath}`);
 
-    // 오디오 길이 추정 (대략 150 단어/분, mp3 기준)
-    const wordCount = node.input.split(/\s+/).length;
-    node.audioDuration = Math.ceil((wordCount / 150) * 60); // 초 단위
-    console.log(`   ⏱️  예상 길이: ${node.audioDuration}초`);
+    // ffprobe로 실제 오디오 길이 측정
+    try {
+      const command = `ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${node.audioPath}"`;
+      const durationStr = execSync(command, { encoding: 'utf8' }).trim();
+      node.audioDuration = Math.ceil(parseFloat(durationStr)); // 초 단위, 올림
+      console.log(`   ⏱️  실제 오디오 길이: ${node.audioDuration}초`);
+    } catch (error) {
+      console.error(`   ⚠️  오디오 길이 측정 실패, 추정값 사용: ${error.message}`);
+      // fallback: 한글 기준 추정 (약 150자/분)
+      const charCount = node.input.length;
+      node.audioDuration = Math.ceil((charCount / 150) * 60);
+      console.log(`   ⏱️  추정 길이: ${node.audioDuration}초`);
+    }
 
     return node.audioPath;
   }

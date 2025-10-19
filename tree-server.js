@@ -2,6 +2,7 @@
 
 const express = require('express');
 const path = require('path');
+const fs = require('fs').promises;
 require('dotenv').config();
 
 const TreeExecutor = require('./tree-engine/TreeExecutor');
@@ -21,6 +22,9 @@ app.use('/generated', express.static(path.join(__dirname, 'generated')));
 const executors = new Map();
 const fileManager = new FileManager();
 const videoComposer = new VideoComposer();
+
+// 설정 파일 경로
+const SETTINGS_FILE = path.join(__dirname, 'config', 'dev-settings.json');
 
 /**
  * 트리 실행 API
@@ -348,6 +352,55 @@ app.delete('/api/files/:executionId', (req, res) => {
 
   } catch (error) {
     console.error('파일 삭제 에러:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * 개발자 설정 불러오기 API
+ */
+app.get('/api/settings', async (req, res) => {
+  try {
+    // 설정 파일 읽기
+    const data = await fs.readFile(SETTINGS_FILE, 'utf8');
+    const settings = JSON.parse(data);
+    res.json(settings);
+  } catch (error) {
+    // 파일이 없으면 null 반환 (프론트엔드에서 기본값 사용)
+    if (error.code === 'ENOENT') {
+      res.json(null);
+    } else {
+      console.error('설정 불러오기 에러:', error);
+      res.status(500).json({ error: error.message });
+    }
+  }
+});
+
+/**
+ * 개발자 설정 저장 API
+ */
+app.post('/api/settings', async (req, res) => {
+  try {
+    const settings = req.body;
+
+    // config 디렉토리가 없으면 생성
+    const configDir = path.dirname(SETTINGS_FILE);
+    try {
+      await fs.access(configDir);
+    } catch {
+      await fs.mkdir(configDir, { recursive: true });
+    }
+
+    // 설정 파일 저장
+    await fs.writeFile(SETTINGS_FILE, JSON.stringify(settings, null, 2), 'utf8');
+
+    res.json({
+      success: true,
+      message: '설정이 저장되었습니다.'
+    });
+
+  } catch (error) {
+    console.error('설정 저장 에러:', error);
     res.status(500).json({ error: error.message });
   }
 });

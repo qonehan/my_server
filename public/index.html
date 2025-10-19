@@ -36,6 +36,17 @@
         ></textarea>
       </section>
 
+      <!-- 테스트 모드 토글 -->
+      <section class="input-section">
+        <div class="test-mode-row">
+          <span class="test-mode-label">테스트 모드 (2개 장면만 생성)</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="testModeToggle">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </section>
+
       <!-- 장면 정보 -->
       <section class="input-section">
         <div class="scene-info-container">
@@ -62,6 +73,9 @@
         </div>
         <p id="executionInfo" class="execution-info"></p>
       </section>
+
+      <!-- 개발자 설정 버튼 -->
+      <button id="devSettingsBtn" class="dev-settings-btn-sidebar" title="개발자 설정">⚙️</button>
     </aside>
 
     <!-- 우측 패널: 트리 시각화 -->
@@ -115,6 +129,132 @@
         <button id="newVideoBtn" class="btn btn-secondary">
           🔄 새 영상 만들기
         </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 개발자 설정 모달 -->
+  <div id="devSettingsModal" class="dev-settings-modal" style="display: none;">
+    <div class="modal-content dev-modal-content">
+      <div class="modal-header">
+        <h2>⚙️ 개발자 설정</h2>
+        <button id="devSettingsClose" class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body dev-modal-body">
+        <div id="devLoginScreen" class="dev-login-screen">
+          <div class="dev-login-form">
+            <label for="devPassword">비밀번호</label>
+            <input type="password" id="devPassword" placeholder="개발자 비밀번호 입력">
+            <button id="devLoginBtn" class="btn btn-primary">로그인</button>
+            <p id="devLoginError" class="dev-login-error"></p>
+          </div>
+        </div>
+        <div id="devSettingsContent" class="dev-settings-content" style="display: none;">
+          <!-- 탭 네비게이션 -->
+          <div class="dev-tabs">
+            <button class="dev-tab active" data-tab="general">기본 설정</button>
+            <button class="dev-tab" data-tab="layer1">1층: 대본 생성</button>
+            <button class="dev-tab" data-tab="layer2">2층: 이미지 컨셉</button>
+            <button class="dev-tab" data-tab="layer3">3층: 이미지 생성</button>
+          </div>
+
+          <!-- 기본 설정 탭 -->
+          <div id="tabGeneral" class="dev-tab-content active">
+            <h3>기본 설정</h3>
+            <div class="dev-setting-item">
+              <label for="devTestSceneCount">테스트 모드 최대 장면 수</label>
+              <input type="number" id="devTestSceneCount" min="1" max="10" value="2">
+              <p class="dev-help-text">테스트 모드에서 생성할 최대 장면 수 (대본에 나온 장면 중 앞부분만 생성)</p>
+            </div>
+          </div>
+
+          <!-- 1층: 대본 생성 탭 -->
+          <div id="tabLayer1" class="dev-tab-content">
+            <h3>1층: Shorts 대본 생성</h3>
+            <div class="dev-setting-item">
+              <label for="devLayer1Model">모델</label>
+              <select id="devLayer1Model" class="dev-select">
+                <option value="gpt-4o">gpt-4o</option>
+                <option value="gpt-4o-mini">gpt-4o-mini</option>
+                <option value="gpt-4-turbo">gpt-4-turbo</option>
+                <option value="gpt-3.5-turbo">gpt-3.5-turbo</option>
+              </select>
+            </div>
+            <div class="dev-setting-item">
+              <label for="devLayer1System">시스템 메시지</label>
+              <textarea id="devLayer1System" rows="3" placeholder="시스템 메시지를 입력하세요..."></textarea>
+            </div>
+            <div class="dev-setting-item">
+              <label for="devLayer1Prompt">프롬프트 템플릿</label>
+              <textarea id="devLayer1Prompt" rows="12" placeholder="프롬프트 템플릿을 입력하세요..."></textarea>
+              <p class="dev-help-text">사용 가능한 변수: {input}</p>
+            </div>
+          </div>
+
+          <!-- 2층: 이미지 컨셉 탭 -->
+          <div id="tabLayer2" class="dev-tab-content">
+            <h3>2층: 자막 & 이미지 컨셉</h3>
+            <div class="dev-setting-item">
+              <label for="devLayer2Model">모델</label>
+              <select id="devLayer2Model" class="dev-select">
+                <option value="gpt-4o">gpt-4o</option>
+                <option value="gpt-4o-mini">gpt-4o-mini</option>
+                <option value="gpt-4-turbo">gpt-4-turbo</option>
+                <option value="gpt-3.5-turbo">gpt-3.5-turbo</option>
+              </select>
+            </div>
+            <div class="dev-setting-item">
+              <label for="devLayer2System">시스템 메시지</label>
+              <textarea id="devLayer2System" rows="3" placeholder="시스템 메시지를 입력하세요..."></textarea>
+            </div>
+            <div class="dev-setting-item">
+              <label for="devLayer2Prompt">프롬프트 템플릿</label>
+              <textarea id="devLayer2Prompt" rows="12" placeholder="프롬프트 템플릿을 입력하세요..."></textarea>
+              <p class="dev-help-text">사용 가능한 변수: {parent}</p>
+            </div>
+          </div>
+
+          <!-- 3층: 이미지 생성 탭 -->
+          <div id="tabLayer3" class="dev-tab-content">
+            <h3>3층: 이미지 생성 (DALL-E)</h3>
+            <div class="dev-setting-item">
+              <label for="devLayer3Model">모델</label>
+              <select id="devLayer3Model" class="dev-select">
+                <option value="dall-e-3">dall-e-3</option>
+                <option value="dall-e-2">dall-e-2</option>
+                <option value="gpt-image-1">gpt-image-1</option>
+                <option value="gpt-image-1-mini">gpt-image-1-mini</option>
+              </select>
+            </div>
+            <div class="dev-setting-item">
+              <label for="devLayer3Size">이미지 크기</label>
+              <select id="devLayer3Size" class="dev-select">
+                <option value="1024x1792">1024x1792 (세로)</option>
+                <option value="1792x1024">1792x1024 (가로)</option>
+                <option value="1024x1024">1024x1024 (정사각형)</option>
+              </select>
+            </div>
+            <div class="dev-setting-item">
+              <label for="devLayer3Quality">품질</label>
+              <select id="devLayer3Quality" class="dev-select">
+                <option value="standard">Standard</option>
+                <option value="hd">HD</option>
+              </select>
+            </div>
+            <div class="dev-setting-item">
+              <label for="devLayer3Style">스타일</label>
+              <select id="devLayer3Style" class="dev-select">
+                <option value="natural">Natural</option>
+                <option value="vivid">Vivid</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="dev-button-group">
+            <button id="devSaveBtn" class="btn btn-primary">저장</button>
+            <button id="devResetBtn" class="btn btn-secondary">초기화</button>
+          </div>
+        </div>
       </div>
     </div>
   </div>

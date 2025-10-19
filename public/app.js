@@ -5,6 +5,7 @@ const apiKeyInput = document.getElementById('apiKey');
 const inputTextArea = document.getElementById('inputText');
 const generateBtn = document.getElementById('generateBtn');
 const sceneInfo = document.getElementById('sceneInfo');
+const testModeToggle = document.getElementById('testModeToggle');
 
 // 캔버스
 const treeSvg = document.getElementById('treeSvg');
@@ -69,14 +70,14 @@ const modelCapabilities = {
   },
   'gpt-image-1': {
     supportsSize: true,
-    supportedSizes: ['1024x1792'],
+    supportedSizes: ['1024x1536', '1536x1024', '1024x1024', 'auto'],
     supportsQuality: true,
     supportedQualities: ['low', 'medium', 'high', 'auto'],
     supportsStyle: false
   },
   'gpt-image-1-mini': {
     supportsSize: true,
-    supportedSizes: ['1024x1792'],
+    supportedSizes: ['1024x1536', '1536x1024', '1024x1024', 'auto'],
     supportsQuality: true,
     supportedQualities: ['low', 'medium', 'high', 'auto'],
     supportsStyle: false
@@ -150,8 +151,8 @@ const initialNodeTemplates = {
     name: '[2층] 자막 & 이미지 컨셉',
     status: 'pending',
     model: 'gpt-4o',
-    systemMessage: '너는 교육 영상 연출 전문가야. 대본을 분석해서 핵심 키워드 자막과 시각적 이미지 컨셉을 만들어.',
-    promptTemplate: `다음 장면의 대본을 바탕으로 자막과 이미지를 기획해줘:
+    systemMessage: '너는 교육 영상 일러스트 기획 전문가야. 대본의 핵심 내용을 손그림 스타일 일러스트로 시각화하는 프롬프트를 만들어.',
+    promptTemplate: `다음 장면의 대본을 분석하고, 손그림 일러스트로 표현할 이미지 프롬프트를 작성해줘:
 
 장면 대본:
 {parent}
@@ -159,26 +160,40 @@ const initialNodeTemplates = {
 출력 형식 (정확히 지켜줘):
 첫 번째 줄: 화면에 표시할 핵심 키워드 자막 (10자 이내)
 ===IMAGE===
-두 번째 부분: DALL-E 이미지 프롬프트 (영문, 공책 배경 + 색연필 스타일)
+두 번째 부분: DALL-E 이미지 프롬프트 (영문)
 
-⚠️ 이미지 프롬프트 작성 규칙:
-- 반드시 "notebook paper background with colored pencil sketch of [주요 개념]" 형식
-- 9:16 portrait, hand-drawn style, educational illustration 포함
-- 대본의 핵심 개념만 간단한 스케치로 표현
+⚠️ 이미지 프롬프트 필수 구조 (반드시 이 순서대로):
+1. 스타일 고정: "Hand-drawn illustration style, colored pencil sketch on beige paper,"
+2. 구도: "9:16 vertical portrait composition, centered,"
+3. 내용: 대본의 핵심 개념을 구체적으로 묘사 (단순하고 명확하게)
+4. 색상: "soft pastel colors, gentle shading,"
+5. 마무리: "simple and clean, educational drawing, white margins"
 
-예시:
-AI 발전
+📌 핵심 규칙:
+- 대본에서 설명하는 **핵심 대상이나 개념**을 그림의 중심에 배치
+- 복잡한 배경이나 여러 요소 금지 → 한 장면에 하나의 주제만
+- 텍스트, 문자, 라벨 절대 금지 → 순수 그림만
+- "hand-drawn", "colored pencil", "sketch" 스타일 키워드 필수 포함
+
+✅ 좋은 예시:
+대본: "인공지능은 이미 우리 생활 곳곳에 사용되고 있어요."
+자막: AI 활용
 ===IMAGE===
-Notebook paper background with colored pencil sketch of artificial intelligence concept, simple hand-drawn brain with circuits and data flowing, 9:16 portrait, hand-drawn style, educational illustration, pastel colors`
+Hand-drawn illustration style, colored pencil sketch on beige paper, 9:16 vertical portrait composition, centered, a simple robot helping a person using smartphone and laptop at home, soft pastel colors, gentle shading, simple and clean, educational drawing, white margins
+
+대본: "의료 분야에서는 질병 진단의 정확도가 크게 향상되었죠."
+자막: 의료 진단
+===IMAGE===
+Hand-drawn illustration style, colored pencil sketch on beige paper, 9:16 vertical portrait composition, centered, a doctor looking at medical scan on screen with AI assistance icon, soft pastel colors, gentle shading, simple and clean, educational drawing, white margins`
   },
   image: {
     name: '[3층] 이미지 생성',
     status: 'pending',
     nodeType: 'dalle',
-    model: 'gpt-image-1',
+    model: 'dall-e-3',
     promptTemplate: '{parent}',
     imageSize: '1024x1792',
-    imageQuality: 'medium',
+    imageQuality: 'standard',
     imageStyle: 'natural',
     parentArrayIndex: 1  // 2층의 두 번째 출력 (이미지 프롬프트)
   },
@@ -219,33 +234,38 @@ function createInitialNodes() {
 }
 
 // ========== 실행 트리 구조 생성 ==========
-function getDynamicTreeConfig() {
+async function getDynamicTreeConfig() {
+  const isTestMode = testModeToggle.checked;
+  const devSettings = await loadDevSettings();
+
   return {
     dynamicChildren: true,
+    testMode: isTestMode,  // 테스트 모드 플래그 추가
+    testSceneCount: devSettings.testSceneCount,  // 테스트 모드 장면 수
     nodes: [
       {
         id: 'root',
         name: '[1층] Shorts 대본 생성',
-        model: initialNodeTemplates.root.model || 'gpt-3.5-turbo',
-        systemMessage: initialNodeTemplates.root.systemMessage,
-        promptTemplate: initialNodeTemplates.root.promptTemplate,
+        model: devSettings.layer1.model,
+        systemMessage: devSettings.layer1.systemMessage,
+        promptTemplate: devSettings.layer1.promptTemplate,
         outputSeparator: '---'
       }
     ],
     nodeTemplates: {
       planning: {
-        model: initialNodeTemplates.planning.model || 'gpt-3.5-turbo',
-        systemMessage: initialNodeTemplates.planning.systemMessage,
-        promptTemplate: initialNodeTemplates.planning.promptTemplate,
+        model: devSettings.layer2.model,
+        systemMessage: devSettings.layer2.systemMessage,
+        promptTemplate: devSettings.layer2.promptTemplate,
         outputSeparator: '===IMAGE==='
       },
       image: {
         nodeType: 'dalle',
-        model: initialNodeTemplates.image.model || 'dall-e-3',
+        model: devSettings.layer3.model,
         promptTemplate: '{parent}',
-        imageSize: initialNodeTemplates.image.imageSize || '1024x1792',
-        imageQuality: initialNodeTemplates.image.imageQuality || 'medium',
-        imageStyle: initialNodeTemplates.image.imageStyle || 'natural'
+        imageSize: devSettings.layer3.imageSize,
+        imageQuality: devSettings.layer3.imageQuality,
+        imageStyle: devSettings.layer3.imageStyle
       },
       audio: {
         nodeType: 'tts',
@@ -282,13 +302,14 @@ async function generateVideo() {
 
   try {
     // 트리 실행 요청
+    const treeConfig = await getDynamicTreeConfig();
     const executeResponse = await fetch('/api/tree/execute', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         apiKey: apiKey,
         initialInput: inputText,
-        treeConfig: getDynamicTreeConfig()
+        treeConfig: treeConfig
       })
     });
 
@@ -436,7 +457,7 @@ function showResult(videoData) {
 }
 
 // ========== 트리 시각화 ==========
-function updateTreeVisualization(nodes, fromExecution = false) {
+function updateTreeVisualization(nodes) {
   if (!nodes || nodes.length === 0) return;
 
   const svg = treeSvg;
@@ -595,7 +616,7 @@ function calculateTreeLayout(nodes) {
 }
 
 // ========== 노드 클릭 핸들러 ==========
-function onNodeClick(node, event) {
+function onNodeClick(node) {
   selectedNode = node;
   sidebarNodeName.textContent = node.name;
 
@@ -640,7 +661,7 @@ function onNodeClick(node, event) {
       <span class="popup-field-label">Developer Message (시스템 프롬프트)</span>
       ${isEditable ? `
         <textarea class="popup-field-edit" id="editSystemMessage" rows="3">${escapeHtml(node.systemMessage)}</textarea>
-        <button class="btn-save-template" onclick="saveSystemMessage('${node.id}', '${getNodeLayer(node)}')">같은 층 전체 적용</button>
+        <button class="btn-save-template" onclick="saveSystemMessage('${getNodeLayer(node)}')">같은 층 전체 적용</button>
       ` : `
         <div class="popup-field-value code">${escapeHtml(node.systemMessage)}</div>
       `}
@@ -660,7 +681,7 @@ function onNodeClick(node, event) {
       <span class="popup-field-label">User Prompt Template (치환 전)</span>
       ${isEditable ? `
         <textarea class="popup-field-edit" id="editPromptTemplate" rows="8">${escapeHtml(node.promptTemplate)}</textarea>
-        <button class="btn-save-template" onclick="saveTemplate('${node.id}', '${getNodeLayer(node)}')">같은 층 전체 적용</button>
+        <button class="btn-save-template" onclick="saveTemplate('${getNodeLayer(node)}')">같은 층 전체 적용</button>
       ` : `
         <div class="popup-field-value code">${escapeHtml(node.promptTemplate)}</div>
       `}
@@ -931,7 +952,7 @@ function getNodeLayer(node) {
 }
 
 // ========== 템플릿 저장 (같은 층 전체 적용) ==========
-window.saveTemplate = function(nodeId, layer) {
+window.saveTemplate = function(layer) {
   const newTemplate = document.getElementById('editPromptTemplate').value;
 
   if (!newTemplate.trim()) {
@@ -961,7 +982,7 @@ window.saveTemplate = function(nodeId, layer) {
 };
 
 // ========== 시스템 메시지 저장 (같은 층 전체 적용) ==========
-window.saveSystemMessage = function(nodeId, layer) {
+window.saveSystemMessage = function(layer) {
   const newSystemMessage = document.getElementById('editSystemMessage').value;
 
   if (!newSystemMessage.trim()) {
@@ -1159,6 +1180,12 @@ window.addEventListener('load', () => {
   const savedKey = localStorage.getItem('openai_api_key');
   if (savedKey) apiKeyInput.value = savedKey;
 
+  // 테스트 모드 상태 복원
+  const savedTestMode = localStorage.getItem('test_mode');
+  if (savedTestMode === 'true') {
+    testModeToggle.checked = true;
+  }
+
   // 초기 트리 표시
   const initialNodes = createInitialNodes();
   updateTreeVisualization(initialNodes);
@@ -1166,4 +1193,233 @@ window.addEventListener('load', () => {
 
 apiKeyInput.addEventListener('change', () => {
   localStorage.setItem('openai_api_key', apiKeyInput.value);
+});
+
+// 테스트 모드 토글 이벤트
+testModeToggle.addEventListener('change', () => {
+  localStorage.setItem('test_mode', testModeToggle.checked);
+  console.log(`테스트 모드: ${testModeToggle.checked ? 'ON (2개 장면만 생성)' : 'OFF (전체 장면 생성)'}`);
+});
+
+// ========== 개발자 설정 ==========
+const devSettingsBtn = document.getElementById('devSettingsBtn');
+const devSettingsModal = document.getElementById('devSettingsModal');
+const devSettingsClose = document.getElementById('devSettingsClose');
+const devLoginScreen = document.getElementById('devLoginScreen');
+const devSettingsContent = document.getElementById('devSettingsContent');
+const devPassword = document.getElementById('devPassword');
+const devLoginBtn = document.getElementById('devLoginBtn');
+const devLoginError = document.getElementById('devLoginError');
+const devTestSceneCount = document.getElementById('devTestSceneCount');
+const devSaveBtn = document.getElementById('devSaveBtn');
+const devResetBtn = document.getElementById('devResetBtn');
+
+// 각 층별 설정 요소
+const devLayer1Model = document.getElementById('devLayer1Model');
+const devLayer1System = document.getElementById('devLayer1System');
+const devLayer1Prompt = document.getElementById('devLayer1Prompt');
+const devLayer2Model = document.getElementById('devLayer2Model');
+const devLayer2System = document.getElementById('devLayer2System');
+const devLayer2Prompt = document.getElementById('devLayer2Prompt');
+const devLayer3Model = document.getElementById('devLayer3Model');
+const devLayer3Size = document.getElementById('devLayer3Size');
+const devLayer3Quality = document.getElementById('devLayer3Quality');
+const devLayer3Style = document.getElementById('devLayer3Style');
+
+const DEV_PASSWORD = 'ai@shorts';
+let isDevAuthenticated = false;
+
+// 개발자 설정 기본값
+const defaultDevSettings = {
+  testSceneCount: 2,
+  layer1: {
+    model: 'gpt-4o',
+    systemMessage: '너는 교육 컨텐츠 전문 대본 작가야. 글을 읽고 핵심을 파악해서 이해하기 쉬운 Shorts 대본을 작성해.',
+    promptTemplate: initialNodeTemplates.root.promptTemplate
+  },
+  layer2: {
+    model: 'gpt-4o',
+    systemMessage: initialNodeTemplates.planning.systemMessage,
+    promptTemplate: initialNodeTemplates.planning.promptTemplate
+  },
+  layer3: {
+    model: 'dall-e-3',
+    imageSize: '1024x1792',
+    imageQuality: 'standard',
+    imageStyle: 'natural'
+  }
+};
+
+// 개발자 설정 불러오기 (서버에서)
+async function loadDevSettings() {
+  try {
+    const response = await fetch('/api/settings');
+    const settings = await response.json();
+
+    // 서버에 설정이 없으면 기본값 사용
+    if (!settings) {
+      return { ...defaultDevSettings };
+    }
+
+    return settings;
+  } catch (error) {
+    console.error('설정 불러오기 실패, 기본값 사용:', error);
+    return { ...defaultDevSettings };
+  }
+}
+
+// 개발자 설정 저장 (서버로)
+async function saveDevSettings(settings) {
+  try {
+    const response = await fetch('/api/settings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(settings)
+    });
+
+    const result = await response.json();
+    if (!result.success) {
+      throw new Error('설정 저장 실패');
+    }
+
+    return true;
+  } catch (error) {
+    console.error('설정 저장 실패:', error);
+    throw error;
+  }
+}
+
+// 개발자 설정 모달 열기
+devSettingsBtn.addEventListener('click', async () => {
+  devSettingsModal.style.display = 'flex';
+  devPassword.value = '';
+  devLoginError.textContent = '';
+
+  if (isDevAuthenticated) {
+    devLoginScreen.style.display = 'none';
+    devSettingsContent.style.display = 'block';
+    await loadDevSettingsToUI();
+  } else {
+    devLoginScreen.style.display = 'block';
+    devSettingsContent.style.display = 'none';
+  }
+});
+
+// 개발자 설정 모달 닫기
+devSettingsClose.addEventListener('click', () => {
+  devSettingsModal.style.display = 'none';
+});
+
+// 로그인 처리
+devLoginBtn.addEventListener('click', async () => {
+  if (devPassword.value === DEV_PASSWORD) {
+    isDevAuthenticated = true;
+    devLoginScreen.style.display = 'none';
+    devSettingsContent.style.display = 'block';
+    await loadDevSettingsToUI();
+    devLoginError.textContent = '';
+  } else {
+    devLoginError.textContent = '비밀번호가 올바르지 않습니다.';
+  }
+});
+
+// Enter 키로 로그인
+devPassword.addEventListener('keypress', (e) => {
+  if (e.key === 'Enter') {
+    devLoginBtn.click();
+  }
+});
+
+// 개발자 설정 UI에 로드
+async function loadDevSettingsToUI() {
+  const settings = await loadDevSettings();
+
+  // 기본 설정
+  devTestSceneCount.value = settings.testSceneCount;
+
+  // 1층 설정
+  devLayer1Model.value = settings.layer1.model;
+  devLayer1System.value = settings.layer1.systemMessage;
+  devLayer1Prompt.value = settings.layer1.promptTemplate;
+
+  // 2층 설정
+  devLayer2Model.value = settings.layer2.model;
+  devLayer2System.value = settings.layer2.systemMessage;
+  devLayer2Prompt.value = settings.layer2.promptTemplate;
+
+  // 3층 설정
+  devLayer3Model.value = settings.layer3.model;
+  devLayer3Size.value = settings.layer3.imageSize;
+  devLayer3Quality.value = settings.layer3.imageQuality;
+  devLayer3Style.value = settings.layer3.imageStyle;
+}
+
+// 개발자 설정 저장
+devSaveBtn.addEventListener('click', async () => {
+  try {
+    const settings = {
+      testSceneCount: parseInt(devTestSceneCount.value),
+      layer1: {
+        model: devLayer1Model.value,
+        systemMessage: devLayer1System.value,
+        promptTemplate: devLayer1Prompt.value
+      },
+      layer2: {
+        model: devLayer2Model.value,
+        systemMessage: devLayer2System.value,
+        promptTemplate: devLayer2Prompt.value
+      },
+      layer3: {
+        model: devLayer3Model.value,
+        imageSize: devLayer3Size.value,
+        imageQuality: devLayer3Quality.value,
+        imageStyle: devLayer3Style.value
+      }
+    };
+
+    await saveDevSettings(settings);
+    alert('설정이 저장되었습니다! 서버 재시작 후에도 유지됩니다.');
+    devSettingsModal.style.display = 'none';
+
+    // 트리 업데이트
+    const initialNodes = createInitialNodes();
+    updateTreeVisualization(initialNodes);
+  } catch (error) {
+    alert('설정 저장에 실패했습니다: ' + error.message);
+  }
+});
+
+// 개발자 설정 초기화
+devResetBtn.addEventListener('click', async () => {
+  if (confirm('모든 설정을 기본값으로 초기화하시겠습니까?')) {
+    try {
+      await saveDevSettings({ ...defaultDevSettings });
+      await loadDevSettingsToUI();
+      alert('설정이 초기화되었습니다!');
+    } catch (error) {
+      alert('설정 초기화에 실패했습니다: ' + error.message);
+    }
+  }
+});
+
+// 모달 외부 클릭 시 닫기
+devSettingsModal.addEventListener('click', (e) => {
+  if (e.target === devSettingsModal) {
+    devSettingsModal.style.display = 'none';
+  }
+});
+
+// 탭 전환
+document.querySelectorAll('.dev-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    const targetTab = tab.dataset.tab;
+
+    // 모든 탭 비활성화
+    document.querySelectorAll('.dev-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.dev-tab-content').forEach(c => c.classList.remove('active'));
+
+    // 선택한 탭 활성화
+    tab.classList.add('active');
+    document.getElementById(`tab${targetTab.charAt(0).toUpperCase() + targetTab.slice(1)}`).classList.add('active');
+  });
 });
