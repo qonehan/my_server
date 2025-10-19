@@ -915,22 +915,267 @@ body {
 }
 
 /* ==================== 반응형 ==================== */
+/* ==================== 모바일 반응형 ==================== */
+
+/* 태블릿 */
+@media (max-width: 1024px) {
+  .left-panel {
+    width: 320px;
+    min-width: 320px;
+    max-width: 320px;
+  }
+
+  .panel-header h1 {
+    font-size: 20px;
+  }
+
+  .input-section {
+    padding: 12px 16px;
+  }
+}
+
+/* 모바일 */
 @media (max-width: 768px) {
+  body {
+    overflow: auto;
+  }
+
   .app-container {
     flex-direction: column;
+    height: auto;
+    min-height: 100vh;
   }
 
   .left-panel {
     width: 100%;
-    max-height: 40vh;
+    min-width: 100%;
+    max-width: 100%;
+    max-height: none;
+    position: relative;
+    z-index: 10;
+  }
+
+  .panel-header {
+    padding: 16px;
+  }
+
+  .panel-header h1 {
+    font-size: 20px;
+    margin-bottom: 4px;
+  }
+
+  .panel-header .subtitle {
+    font-size: 12px;
+  }
+
+  .input-section {
+    padding: 12px 16px;
+  }
+
+  .input-section label {
+    font-size: 13px;
+  }
+
+  .input-section input,
+  .input-section textarea {
+    font-size: 16px; /* iOS 자동 줌 방지 */
+    padding: 12px;
+  }
+
+  .input-section textarea {
+    min-height: 100px;
+  }
+
+  .test-mode-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 12px;
+  }
+
+  .toggle-container {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .execute-button {
+    font-size: 15px;
+    padding: 14px 24px;
+  }
+
+  .status-section {
+    padding: 12px 16px;
+  }
+
+  .status-item {
+    font-size: 13px;
+  }
+
+  .progress-container {
+    height: 6px;
+  }
+
+  /* 메인 패널 */
+  .main-panel {
+    height: 500px;
+    min-height: 500px;
+  }
+
+  .canvas-container {
+    touch-action: pan-x pan-y;
+  }
+
+  /* 노드 사이드바 */
+  .node-sidebar {
+    width: 100%;
+    max-width: 100%;
+    right: 0;
+    height: 70vh;
+    max-height: 70vh;
+  }
+
+  .node-sidebar-content {
+    padding: 16px;
+  }
+
+  .node-sidebar h2 {
+    font-size: 18px;
+  }
+
+  .node-info-item h3 {
+    font-size: 14px;
+  }
+
+  .node-info-item textarea {
+    font-size: 14px;
+  }
+
+  /* 개발자 설정 모달 */
+  .dev-settings-modal {
+    padding: 16px;
+    align-items: flex-start;
+  }
+
+  .dev-settings-content {
+    width: 100%;
+    max-width: 100%;
+    max-height: 90vh;
+    margin: 20px 0;
+  }
+
+  .dev-tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .dev-tab {
+    font-size: 12px;
+    padding: 10px 12px;
+    white-space: nowrap;
+  }
+
+  .dev-tab-content {
+    padding: 16px;
+  }
+
+  .dev-setting-group label {
+    font-size: 13px;
+  }
+
+  .dev-setting-group input,
+  .dev-setting-group select,
+  .dev-setting-group textarea {
+    font-size: 16px; /* iOS 자동 줌 방지 */
+  }
+
+  /* 개발자 설정 버튼 */
+  .dev-settings-btn-sidebar {
+    bottom: 12px;
+    left: 12px;
+    width: 44px;
+    height: 44px;
+    font-size: 20px;
+  }
+
+  /* 결과 모달 */
+  .result-modal-content {
+    width: 95%;
+    max-width: 95%;
+    margin: 20px auto;
+    padding: 16px;
+  }
+
+  .result-modal-content h2 {
+    font-size: 20px;
+  }
+
+  .result-modal-buttons {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .result-modal-buttons button {
+    width: 100%;
+  }
+}
+
+/* 작은 모바일 */
+@media (max-width: 480px) {
+  .panel-header h1 {
+    font-size: 18px;
+  }
+
+  .input-section {
+    padding: 10px 12px;
+  }
+
+  .execute-button {
+    font-size: 14px;
+    padding: 12px 20px;
   }
 
   .main-panel {
-    height: 60vh;
+    height: 400px;
+    min-height: 400px;
+  }
+
+  .dev-tab {
+    font-size: 11px;
+    padding: 8px 10px;
   }
 
   .node-sidebar {
-    width: 90%;
-    max-width: none;
+    height: 80vh;
+    max-height: 80vh;
+  }
+}
+
+/* 가로 모드 */
+@media (max-width: 768px) and (orientation: landscape) {
+  .app-container {
+    flex-direction: row;
+  }
+
+  .left-panel {
+    width: 320px;
+    min-width: 320px;
+    max-width: 320px;
+    height: 100vh;
+    overflow-y: auto;
+  }
+
+  .main-panel {
+    flex: 1;
+    height: 100vh;
+  }
+
+  .node-sidebar {
+    width: 50%;
+    max-width: 400px;
+    height: 100vh;
+    max-height: 100vh;
   }
 }
