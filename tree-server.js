@@ -10,7 +10,7 @@ const FileManager = require('./utils/FileManager');
 const VideoComposer = require('./video-engine/VideoComposer');
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 80;
 
 app.use(express.json());
 app.use(express.static('public'));
@@ -406,12 +406,12 @@ app.post('/api/settings', async (req, res) => {
 });
 
 // 서버 시작
-app.listen(PORT, () => {
-  console.log(`🌳 API Tree 서버가 http://localhost:${PORT} 에서 실행 중입니다.`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`🌳 API Tree 서버가 http://0.0.0.0:${PORT} 에서 실행 중입니다.`);
   console.log('📝 예제 트리: GET /api/tree/example');
   console.log('▶️  트리 실행: POST /api/tree/execute');
   console.log('📊 결과 조회: GET /api/tree/result/:executionId');
-  console.log('📁 생성 파일: http://localhost:${PORT}/generated/');
+  console.log('📁 생성 파일: http://0.0.0.0:${PORT}/generated/');
   console.log('🗑️  파일 정리: POST /api/files/cleanup');
 
   // 서버 시작 시 오래된 파일 정리
