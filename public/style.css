@@ -937,35 +937,80 @@ body {
 /* 모바일 */
 @media (max-width: 768px) {
   body {
-    overflow: auto;
+    overflow: hidden;
   }
 
   .app-container {
-    flex-direction: column;
-    height: auto;
-    min-height: 100vh;
+    flex-direction: column-reverse; /* 트리를 위로, 컨트롤을 아래로 */
+    height: 100vh;
   }
 
+  /* 좌측 패널을 하단 바로 변경 */
   .left-panel {
     width: 100%;
     min-width: 100%;
     max-width: 100%;
-    max-height: none;
-    position: relative;
-    z-index: 10;
+    height: auto;
+    max-height: 50vh;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    z-index: 100;
+    border-radius: 20px 20px 0 0;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
+    overflow-y: auto;
+    transform: translateY(calc(100% - 60px)); /* 기본적으로 숨김 */
+    transition: transform 0.3s ease-out;
+  }
+
+  /* 펼쳐진 상태 */
+  .left-panel.expanded {
+    transform: translateY(0);
+  }
+
+  /* 하단바 핸들 (위로 끌어올리기) */
+  .left-panel::before {
+    content: '';
+    position: absolute;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 40px;
+    height: 4px;
+    background: #ccc;
+    border-radius: 2px;
   }
 
   .panel-header {
-    padding: 16px;
+    padding: 24px 16px 16px 16px; /* 상단 여유 공간 */
+    cursor: pointer;
+    user-select: none;
+    position: relative;
   }
 
   .panel-header h1 {
-    font-size: 20px;
+    font-size: 18px;
     margin-bottom: 4px;
   }
 
   .panel-header .subtitle {
     font-size: 12px;
+  }
+
+  /* 펼치기 화살표 표시 */
+  .panel-header::after {
+    content: '⌃';
+    position: absolute;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 24px;
+    color: white;
+    transition: transform 0.3s;
+  }
+
+  .left-panel.expanded .panel-header::after {
+    transform: translateY(-50%) rotate(180deg);
   }
 
   .input-section {
@@ -1017,14 +1062,31 @@ body {
     height: 6px;
   }
 
-  /* 메인 패널 */
+  /* 메인 패널 - 전체 화면 */
   .main-panel {
-    height: 500px;
-    min-height: 500px;
+    height: 100vh;
+    width: 100vw;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1;
   }
 
   .canvas-container {
-    touch-action: pan-x pan-y;
+    touch-action: manipulation; /* 핀치 줌 활성화 */
+    width: 100%;
+    height: 100%;
+  }
+
+  /* SVG 확대/축소 가능하도록 */
+  #treeSvg {
+    width: 100%;
+    height: 100%;
+    cursor: grab;
+  }
+
+  #treeSvg:active {
+    cursor: grabbing;
   }
 
   /* 노드 사이드바 - 하단에서 올라오는 스타일 */

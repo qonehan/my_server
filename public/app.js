@@ -1423,3 +1423,131 @@ document.querySelectorAll('.dev-tab').forEach(tab => {
     document.getElementById(`tab${targetTab.charAt(0).toUpperCase() + targetTab.slice(1)}`).classList.add('active');
   });
 });
+
+// ==================== 모바일 하단바 토글 ====================
+const leftPanel = document.querySelector('.left-panel');
+const panelHeader = document.querySelector('.panel-header');
+
+// 모바일에서만 작동
+if (window.innerWidth <= 768) {
+  let startY = 0;
+  let currentY = 0;
+  let isDragging = false;
+
+  // 터치 시작
+  panelHeader.addEventListener('touchstart', (e) => {
+    startY = e.touches[0].clientY;
+    isDragging = true;
+  });
+
+  // 터치 이동
+  panelHeader.addEventListener('touchmove', (e) => {
+    if (!isDragging) return;
+    currentY = e.touches[0].clientY;
+    const deltaY = currentY - startY;
+
+    // 위로 드래그하면 펼치기
+    if (deltaY < -50) {
+      leftPanel.classList.add('expanded');
+    }
+    // 아래로 드래그하면 접기
+    else if (deltaY > 50) {
+      leftPanel.classList.remove('expanded');
+    }
+  });
+
+  // 터치 종료
+  panelHeader.addEventListener('touchend', () => {
+    isDragging = false;
+  });
+
+  // 헤더 클릭으로도 토글
+  panelHeader.addEventListener('click', () => {
+    leftPanel.classList.toggle('expanded');
+  });
+}
+
+// 창 크기 변경 시 이벤트 리스너 재설정
+window.addEventListener('resize', () => {
+  if (window.innerWidth > 768) {
+    leftPanel.classList.remove('expanded');
+  }
+});
+
+// ==================== SVG 핀치 줌 ====================
+const svgElement = document.getElementById('treeSvg');
+let scale = 1;
+let lastDistance = 0;
+
+// 두 터치 포인트 사이의 거리 계산
+function getDistance(touch1, touch2) {
+  const dx = touch1.clientX - touch2.clientX;
+  const dy = touch1.clientY - touch2.clientY;
+  return Math.sqrt(dx * dx + dy * dy);
+}
+
+// SVG 확대/축소
+if (svgElement) {
+  svgElement.addEventListener('touchstart', (e) => {
+    if (e.touches.length === 2) {
+      e.preventDefault();
+      lastDistance = getDistance(e.touches[0], e.touches[1]);
+    }
+  });
+
+  svgElement.addEventListener('touchmove', (e) => {
+    if (e.touches.length === 2) {
+      e.preventDefault();
+      const currentDistance = getDistance(e.touches[0], e.touches[1]);
+      const delta = currentDistance - lastDistance;
+
+      // 확대/축소 비율 계산
+      scale += delta * 0.01;
+      scale = Math.max(0.5, Math.min(scale, 5)); // 0.5배 ~ 5배
+
+      // SVG에 transform 적용
+      svgElement.style.transform = `scale(${scale})`;
+      svgElement.style.transformOrigin = 'center center';
+
+      lastDistance = currentDistance;
+    }
+  });
+
+  svgElement.addEventListener('touchend', (e) => {
+    if (e.touches.length < 2) {
+      lastDistance = 0;
+    }
+  });
+}
+
+// ==================== 캔버스 팬(이동) 기능 ====================
+const canvasContainer = document.querySelector('.canvas-container');
+if (canvasContainer && svgElement) {
+  let isPanning = false;
+  let startX = 0;
+  let startY = 0;
+  let translateX = 0;
+  let translateY = 0;
+
+  canvasContainer.addEventListener('touchstart', (e) => {
+    if (e.touches.length === 1) {
+      isPanning = true;
+      startX = e.touches[0].clientX - translateX;
+      startY = e.touches[0].clientY - translateY;
+    }
+  });
+
+  canvasContainer.addEventListener('touchmove', (e) => {
+    if (isPanning && e.touches.length === 1) {
+      e.preventDefault();
+      translateX = e.touches[0].clientX - startX;
+      translateY = e.touches[0].clientY - startY;
+
+      svgElement.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
+    }
+  });
+
+  canvasContainer.addEventListener('touchend', () => {
+    isPanning = false;
+  });
+}
